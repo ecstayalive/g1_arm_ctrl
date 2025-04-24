@@ -1,5 +1,5 @@
 # goal definition
-bool pickup
+string motion
 ---
 # result definition
 bool success

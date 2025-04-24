@@ -63,8 +63,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_action_files(
   DIRECTORY action
   FILES
-  Pickup.action
-  Place.action
+  ArmMotion.action
 )
 
 # # Generate added messages and services with any dependencies listed here

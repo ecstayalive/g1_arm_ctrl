@@ -2,8 +2,6 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/JointState.h>
-#include <unitree_legged_msgs/MotorCmd.h>
-#include <unitree_legged_msgs/MotorState.h>
 
 #include <chrono>
 #include <thread>
@@ -27,6 +25,18 @@ class DualArmAPI {
   };
   virtual void setCmd(const G1DualArmLowCmd& cmd) = 0;
   virtual void getState(G1DualArmLowState& state) = 0;
+};
+
+struct ApiRegistry {
+  static void registerApi(const std::string& name, DualArmAPI* api) {
+    if (api_map_.find(name) != api_map_.end()) {
+      ROS_WARN("Warning: API %s already registered, overwriting", name.c_str());
+    }
+    api_map_[name] = api;
+  }
+
+ private:
+  static std::unordered_map<std::string, DualArmAPI*> api_map_;
 };
 
 class G1DualArmAPI : public DualArmAPI {
@@ -304,23 +314,23 @@ class G1DualCommAPI : public DualArmAPI {
       lowstate_subscriber_;
   ros::Publisher lowcmd_publisher_;
 
-  const std::string kCmdTopic_{"/g1_dual_arm/arm_cmd"};
+  const std::string kCmdTopic_{"/lqc/arm_cmd"};
   const std::string kStateTopic_{"rt/lowstate"};
   const std::vector<std::string> kJointNames_{
-      "l_shoulder_pitch", "l_shoulder_pitch_gain",
-      "l_shoulder_roll",  "l_shoulder_roll_gain",
-      "l_shoulder_yaw",   "l_shoulder_yaw_gain",
-      "l_elbow",          "l_elbow_gain",
-      "l_wrist_roll",     "l_wrist_roll_gain",
-      "l_wrist_pitch",    "l_wrist_pitch_gain",
-      "l_wrist_yaw",      "l_wrist_yaw_gain",
-      "r_shoulder_pitch", "r_shoulder_pitch_gain",
-      "r_shoulder_roll",  "r_shoulder_roll_gain",
-      "r_shoulder_yaw",   "r_shoulder_yaw_gain",
-      "r_elbow",          "r_elbow_gain",
-      "r_wrist_roll",     "r_wrist_roll_gain",
-      "r_wrist_pitch",    "r_wrist_pitch_gain",
-      "r_wrist_yaw",      "r_wrist_yaw_gain"};
+      "L_SHOULDER_PITCH", "L_SHOULDER_PITCH_GAIN",
+      "L_SHOULDER_ROLL",  "L_SHOULDER_ROLL_GAIN",
+      "L_SHOULDER_YAW",   "L_SHOULDER_YAW_GAIN",
+      "L_ELBOW",          "L_ELBOW_GAIN",
+      "L_WRIST_ROLL",     "L_WRIST_ROLL_GAIN",
+      "L_WRIST_PITCH",    "L_WRIST_PITCH_GAIN",
+      "L_WRIST_YAW",      "L_WRIST_YAW_GAIN",
+      "R_SHOULDER_PITCH", "R_SHOULDER_PITCH_GAIN",
+      "R_SHOULDER_ROLL",  "R_SHOULDER_ROLL_GAIN",
+      "R_SHOULDER_YAW",   "R_SHOULDER_YAW_GAIN",
+      "R_ELBOW",          "R_ELBOW_GAIN",
+      "R_WRIST_ROLL",     "R_WRIST_ROLL_GAIN",
+      "R_WRIST_PITCH",    "R_WRIST_PITCH_GAIN",
+      "R_WRIST_YAW",      "R_WRIST_YAW_GAIN"};
   sensor_msgs::JointState msg_{};
   const int kG1NumMotor_{29};
   const int kG1ArmIdxStart_{15};

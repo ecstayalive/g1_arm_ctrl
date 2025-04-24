@@ -6,7 +6,6 @@ int main(int argc, char** argv) {
   ros::AsyncSpinner spinner(4);
   spinner.start();
   g1_controller::G1Controller g1_arm_controller(handle);
-  g1_arm_controller.setSimArmApi();
   // prepare
   // g1_arm_controller.actionPickupAndPlaceBox();
   ros::waitForShutdown();

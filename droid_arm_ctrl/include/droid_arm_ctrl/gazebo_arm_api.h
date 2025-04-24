@@ -2,8 +2,9 @@
 // clang-format off
 #include "arm_api.h"
 // clang-format on
-
 #include <ros/ros.h>
+#include <unitree_legged_msgs/MotorCmd.h>
+#include <unitree_legged_msgs/MotorState.h>
 
 namespace sdk {
 

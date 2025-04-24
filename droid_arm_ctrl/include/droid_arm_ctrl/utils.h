@@ -9,7 +9,7 @@ class Rate {
   using clock = std::chrono::high_resolution_clock;
   using time_point = clock::time_point;
   using nanoseconds = std::chrono::nanoseconds;
-  explicit Rate(int freq)
+  explicit Rate(const int &freq)
       : event_time_(clock::now()), cycle_(int(1e9) / freq) {}
   void sync() { event_time_ = clock::now(); };
   void sleep() {

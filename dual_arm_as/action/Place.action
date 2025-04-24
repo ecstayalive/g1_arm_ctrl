@@ -1,8 +1,0 @@
-# goal definition
-bool place
----
-# result definition
-bool success
----
-# feedback
-float32 progress

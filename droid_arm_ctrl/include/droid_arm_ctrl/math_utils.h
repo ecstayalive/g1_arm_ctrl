@@ -7,8 +7,8 @@ template <typename dtype>
 class InterpolationFn {
  public:
   // For polynomial interpolation
-  virtual void setPolyInterpolationKernel(double period, dtype start_point,
-                                          dtype end_point, int n = 1000) {};
+  virtual void setPolyInterpKernel(double period, dtype start_point,
+                                   dtype end_point, int n = 1000) {};
   // For power smooth function
   virtual void setPowerSmoothKernel(dtype end_point, double k, double alpha) {};
 
@@ -22,8 +22,8 @@ class InterpolationFn {
 template <typename dtype>
 class CubicInterpolationFn : public InterpolationFn<dtype> {
  public:
-  void setPolyInterpolationKernel(double period, dtype start_point,
-                                  dtype end_point, int n = 1000) override {
+  void setPolyInterpKernel(double period, dtype start_point, dtype end_point,
+                           int n = 1000) override {
     period_ = period;
     start_point_ = start_point;
     end_point_ = end_point;
@@ -77,8 +77,8 @@ class CubicInterpolationFn : public InterpolationFn<dtype> {
 template <typename dtype>
 class QuinticInterpolationFn : public InterpolationFn<dtype> {
  public:
-  void setPolyInterpolationKernel(double period, dtype start_point,
-                                  dtype end_point, int n = 1000) override {
+  void setPolyInterpKernel(double period, dtype start_point, dtype end_point,
+                           int n = 1000) override {
     period_ = period;
     start_point_ = start_point;
     end_point_ = end_point;
