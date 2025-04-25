@@ -5,7 +5,6 @@ int main(int argc, char** argv) {
   ros::NodeHandle handle;
   ros::AsyncSpinner spinner(4);
   spinner.start();
-  std::cerr << "Running here... " << std::endl;
   g1_controller::G1ArmSimController g1_arm_controller(handle);
   g1_arm_controller.init();
   g1_arm_controller.start();

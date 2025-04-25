@@ -16,53 +16,56 @@
 
 namespace g1_controller {
 
-enum class MotionLibs {
-  Hello,
-  SelfIntroduction,
-  Shrug,
-  Promotion,
-  Point,
-  Answer1,
-  Answer2,
-  Pickup,
-  Place
-};
 enum class StateMachine { Init, Idle, Executing, UnSafe };
-const std::unordered_map<std::string, MotionLibs> kMotionLibMap{
-    {"hello", MotionLibs::Hello},
-    {"self_introduction", MotionLibs::SelfIntroduction},
-    {"shrug", MotionLibs::Shrug},
-    {"point", MotionLibs::Point},
-    {"promotion", MotionLibs::Promotion},
-    {"answer1", MotionLibs::Answer1},
-    {"answer2", MotionLibs::Answer2},
-    {"pickup", MotionLibs::Pickup},
-    {"place", MotionLibs::Place}};
-
 struct KeyFrame {
   double duration;
   Eigen::VectorXf q;
   Eigen::VectorXf dq;
   Eigen::VectorXf tau;
-  double kp{40.}, kd{1.0};
+  double kp{80.}, kd{1.0};
 };
 
 using MotionProvider = std::function<void(std::deque<KeyFrame> &)>;
 
 class MotionLibsRegistry {
  public:
-  void registerMotionProvider(const std::string &name,
-                              MotionProvider provider) {
-    if (motion_provider_.find(name) != motion_provider_.end()) {
+  void registerMotion(const std::string &name, MotionProvider provider) {
+    if (motion_libs_.find(name) != motion_libs_.end()) {
       ROS_WARN_STREAM(
           "Motion provider "
           << name << " already registered, Overwriting the motion provider");
     }
-    motion_provider_[name] = provider;
+    // ROS_INFO_STREAM("Registering motion provider" << name);
+    motion_libs_[name] = provider;
+  }
+
+  bool hasMotion(const std::string &name) {
+    return motion_libs_.find(name) != motion_libs_.end();
+  }
+
+  MotionProvider &getMotion(const std::string &name) {
+    if (motion_libs_.find(name) == motion_libs_.end()) {
+      ROS_ERROR_STREAM("Motion provider "
+                       << name << " not found, returning default action.");
+      return motion_libs_["hello"];
+    }
+    return motion_libs_[name];
+  }
+
+  std::unordered_map<std::string, MotionProvider> &getAllMotion() {
+    return motion_libs_;
+  }
+
+  void clear() { motion_libs_.clear(); }
+
+  void listMotion() {
+    for (const auto &motion : motion_libs_) {
+      ROS_INFO_STREAM("Motion name: " << motion.first);
+    }
   }
 
  private:
-  std::unordered_map<std::string, MotionProvider> motion_provider_;
+  std::unordered_map<std::string, MotionProvider> motion_libs_;
 };
 
 class G1ArmController {
@@ -79,6 +82,7 @@ class G1ArmController {
   void setIntCommApi(const std::string &name = "eth0") {
     api_ptr_ = std::make_unique<sdk::G1DualCommAPI>(handle_, name);
   }
+  void registerMotion();
 
   void communicationLoop() {
     utils::Rate rate(comm_freq_);
@@ -205,15 +209,15 @@ class G1ArmController {
                                         const double &ratio);
 
   void planInitMotion();
-  void planHelloMotion();
-  void planSelfIntroductionMotion();
-  void planShrugMotion();
-  void planPointMotion();
-  void planPromotionMotion();
-  void planAnswer1Motion();
-  void planAnswer2Motion();
-  void planPickupMotion();
-  void planPlaceMotion();
+  void planHelloMotion(std::deque<KeyFrame> &motion_seq);
+  void planSelfIntroductionMotion(std::deque<KeyFrame> &motion_seq);
+  void planShrugMotion(std::deque<KeyFrame> &motion_seq);
+  void planPointMotion(std::deque<KeyFrame> &motion_seq);
+  void planPromotionMotion(std::deque<KeyFrame> &motion_seq);
+  void planAnswer1Motion(std::deque<KeyFrame> &motion_seq);
+  void planAnswer2Motion(std::deque<KeyFrame> &motion_seq);
+  void planPickupMotion(std::deque<KeyFrame> &motion_seq);
+  void planPlaceMotion(std::deque<KeyFrame> &motion_seq);
 
   bool checkSafety(const Eigen::Ref<const Eigen::VectorXf> &tau,
                    const double &dt) {
@@ -237,12 +241,11 @@ class G1ArmController {
   std::unique_ptr<sdk::DualArmAPI> api_ptr_;
   std::unique_ptr<g1_dual_arm::G1DualArmPlanner> arm_planner_;
   std::mutex mtx_;
-  ros::Time segment_start_time_;
-  std::deque<KeyFrame> motion_seq_;
-  KeyFrame prev_key_frame_;
-  StateMachine arm_state_{StateMachine::Init};
   int ctrl_freq_{200}, comm_freq_{200};
 
+  StateMachine arm_state_{StateMachine::Init};
+  KeyFrame prev_key_frame_;
+  ros::Time segment_start_time_;
   using ArmMotionServer =
       actionlib::SimpleActionServer<dual_arm_as::ArmMotionAction>;
   std::unique_ptr<ArmMotionServer> motion_server_;
@@ -250,9 +253,12 @@ class G1ArmController {
   dual_arm_as::ArmMotionFeedback motion_feedback_;
   math_utils::QuinticInterpolationFn<Eigen::VectorXf> q_interp_fn_;
   math_utils::CubicInterpolationFn<Eigen::VectorXf> c_interp_fn_;
+  std::deque<KeyFrame> motion_seq_;
+  MotionLibsRegistry motion_libs_;
 
   Eigen::Matrix<float, 14, 1> joint_tau_limit_;
-  const double kTauTimeLimit_{2};
+  Eigen::Matrix<float, 14, 1> joint_home_;
+  const double kTauTimeLimit_{2.0};
   double max_tau_time_{0.0};
 };
 }  // namespace g1_controller

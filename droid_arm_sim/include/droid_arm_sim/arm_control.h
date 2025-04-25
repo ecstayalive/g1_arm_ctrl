@@ -18,6 +18,7 @@ class G1ArmSimController : public G1ArmController {
         handle_, "/droid_arm_ctrl/arm_motion", false);
     motion_server_->registerGoalCallback(
         std::bind(&G1ArmSimController::goalCallback, this));
+    registerMotion();
     return true;
   }
 
