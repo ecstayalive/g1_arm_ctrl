@@ -1,13 +1,11 @@
 #pragma once
 
 #include <mutex>
-#include <queue>
 #include <thread>
 
 // clang-format off
 #include "droid_arm_ctrl/arm_model.h"
 #include "droid_arm_ctrl/arm_api.h"
-#include "droid_arm_ctrl/gazebo_arm_api.h"
 #include "droid_arm_ctrl/arm_planner.h"
 #include "droid_arm_ctrl/utils.h"
 // clang-format on
@@ -27,7 +25,7 @@ enum class MotionLibs {
   Answer1,
   Answer2,
   Pickup,
-  Place,
+  Place
 };
 enum class StateMachine { Init, Idle, Executing, UnSafe };
 const std::unordered_map<std::string, MotionLibs> kMotionLibMap{
@@ -67,23 +65,17 @@ class MotionLibsRegistry {
   std::unordered_map<std::string, MotionProvider> motion_provider_;
 };
 
-class G1Controller {
+class G1ArmController {
  public:
-  G1Controller(const ros::NodeHandle &handle);
-  ~G1Controller();
+  G1ArmController(const ros::NodeHandle &handle);
+  ~G1ArmController();
 
   bool init();
   void start();
   void stop();
-
-  void setSimArmApi() {
-    api_ptr_ = std::make_unique<sdk::G1DualArmGazeboAPI>(handle_);
-  }
-
   void setArmApi(const std::string &name = "eth0") {
     api_ptr_ = std::make_unique<sdk::G1DualArmAPI>(name);
   }
-
   void setIntCommApi(const std::string &name = "eth0") {
     api_ptr_ = std::make_unique<sdk::G1DualCommAPI>(handle_, name);
   }
@@ -105,7 +97,6 @@ class G1Controller {
   void ctrlLoop() {
     utils::Rate rate(ctrl_freq_);
     while (running_) {
-      ros::Time now = ros::Time::now();
       if (!checkSafety(low_state_.getTau(),
                        1. / static_cast<double>(ctrl_freq_))) {
         ROS_WARN("Arm is not safe");
@@ -118,6 +109,7 @@ class G1Controller {
           curr_state = arm_state_;
         }
       }
+      ros::Time now = ros::Time::now();
       switch (curr_state) {
         case StateMachine::Init: {
           prev_key_frame_.q = low_state_.getQ();
@@ -212,6 +204,7 @@ class G1Controller {
                                         const KeyFrame &end_kf,
                                         const double &ratio);
 
+  void planInitMotion();
   void planHelloMotion();
   void planSelfIntroductionMotion();
   void planShrugMotion();

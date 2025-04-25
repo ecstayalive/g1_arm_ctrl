@@ -20,14 +20,14 @@ class G1DualArmPlanner {
     robot_model_ = robot_model_loader.getModel();
     robot_state_ = std::make_shared<moveit::core::RobotState>(robot_model_);
     robot_state_->setToDefaultValues();
-    left_arm_model_group_ = robot_model_->getJointModelGroup("g1_left_arm");
-    right_arm_model_group_ = robot_model_->getJointModelGroup("g1_right_arm");
+    left_arm_model_group_ = robot_model_->getJointModelGroup("left_arm");
+    right_arm_model_group_ = robot_model_->getJointModelGroup("right_arm");
     planning_scene_ =
         std::make_shared<planning_scene::PlanningScene>(robot_model_);
     planning_scene_->getCurrentStateNonConst().setToDefaultValues(
-        left_arm_model_group_, "g1_left_arm_home");
+        left_arm_model_group_, "left_home");
     planning_scene_->getCurrentStateNonConst().setToDefaultValues(
-        right_arm_model_group_, "g1_right_arm_home");
+        right_arm_model_group_, "right_home");
     // Trajectory planning algorithm
     std::string planner_plugin_name;
     std::unique_ptr<pluginlib::ClassLoader<planning_interface::PlannerManager>>

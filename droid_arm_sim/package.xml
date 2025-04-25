@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>droid_arm_sim</name>
+  <version>0.0.1</version>
+  <description>The droid_arm_sim package</description>
+  <maintainer email="ecstayalive@163.com">ecstayalive</maintainer>
+  <license>Apache 2.0</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>unitree_legged_msgs</depend>
+  <depend>dual_arm_as</depend>
+  <depend>droid_arm_ctrl</depend>
+  <depend>g1_dual_arm_moveit_config</depend>
+
+  <export>
+  </export>
+</package>

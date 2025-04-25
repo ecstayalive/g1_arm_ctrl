@@ -1,0 +1,92 @@
+left_arm_controller:
+  type: effort_controllers/JointTrajectoryController
+  joints:
+    - left_shoulder_pitch_joint
+    - left_shoulder_roll_joint
+    - left_shoulder_yaw_joint
+    - left_elbow_joint
+    - left_wrist_roll_joint
+    - left_wrist_pitch_joint
+    - left_wrist_yaw_joint
+  gains:
+    left_shoulder_pitch_joint:
+      p: 100
+      d: 1
+      i: 1
+      i_clamp: 1
+    left_shoulder_roll_joint:
+      p: 100
+      d: 1
+      i: 1
+      i_clamp: 1
+    left_shoulder_yaw_joint:
+      p: 100
+      d: 1
+      i: 1
+      i_clamp: 1
+    left_elbow_joint:
+      p: 100
+      d: 1
+      i: 1
+      i_clamp: 1
+    left_wrist_roll_joint:
+      p: 100
+      d: 1
+      i: 1
+      i_clamp: 1
+    left_wrist_pitch_joint:
+      p: 100
+      d: 1
+      i: 1
+      i_clamp: 1
+    left_wrist_yaw_joint:
+      p: 100
+      d: 1
+      i: 1
+      i_clamp: 1
+right_arm_controller:
+  type: effort_controllers/JointTrajectoryController
+  joints:
+    - right_shoulder_pitch_joint
+    - right_shoulder_roll_joint
+    - right_shoulder_yaw_joint
+    - right_elbow_joint
+    - right_wrist_roll_joint
+    - right_wrist_pitch_joint
+    - right_wrist_yaw_joint
+  gains:
+    right_shoulder_pitch_joint:
+      p: 100
+      d: 1
+      i: 1
+      i_clamp: 1
+    right_shoulder_roll_joint:
+      p: 100
+      d: 1
+      i: 1
+      i_clamp: 1
+    right_shoulder_yaw_joint:
+      p: 100
+      d: 1
+      i: 1
+      i_clamp: 1
+    right_elbow_joint:
+      p: 100
+      d: 1
+      i: 1
+      i_clamp: 1
+    right_wrist_roll_joint:
+      p: 100
+      d: 1
+      i: 1
+      i_clamp: 1
+    right_wrist_pitch_joint:
+      p: 100
+      d: 1
+      i: 1
+      i_clamp: 1
+    right_wrist_yaw_joint:
+      p: 100
+      d: 1
+      i: 1
+      i_clamp: 1

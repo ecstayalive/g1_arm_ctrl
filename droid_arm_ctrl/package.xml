@@ -62,9 +62,9 @@
   <build_depend>moveit_visual_tools</build_depend>
   <build_depend>rviz_visual_tools</build_depend>
   <build_depend>geometry_msgs</build_depend>
-  <depend>unitree_legged_msgs</depend>
   <depend>dual_arm_as</depend>
   <depend>sensor_msgs</depend>
+  <depend>g1_dual_arm_moveit_config</depend>
   <build_depend>pinocchio</build_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>std_msgs</exec_depend>

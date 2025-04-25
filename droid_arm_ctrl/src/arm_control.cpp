@@ -4,25 +4,23 @@
 
 namespace g1_controller {
 
-G1Controller::G1Controller(const ros::NodeHandle &handle)
+G1ArmController::G1ArmController(const ros::NodeHandle &handle)
     : handle_(handle), arm_state_{StateMachine::Init} {
-  //   arm_model_ = std::make_unique<g1_dual_arm::G1DualArmModel>(handle);
+  // arm_model_ = std::make_unique<g1_dual_arm::G1DualArmModel>(handle);
   // clang-format off
-  joint_tau_limit_ << 25, 25, 25, 25, 25, 5.0, 5.0,
-                      25, 25, 25, 25, 25, 5.0, 5.0;
+  joint_tau_limit_ << 24, 24, 24, 24, 24, 4.5, 4.5,
+                      24, 24, 24, 24, 24, 4.5, 4.5;
   // clang-format on
-  init();
-  start();
 }
 
-G1Controller::~G1Controller() { stop(); }
+G1ArmController::~G1ArmController() { stop(); }
 
-bool G1Controller::init() {
+bool G1ArmController::init() {
   arm_planner_ = std::make_unique<g1_dual_arm::G1DualArmPlanner>(handle_);
-  bool use_sim;
-  handle_.param("use_sim", use_sim, false);
-  if (use_sim) {
-    setSimArmApi();
+  bool direct_ctrl{false};
+  handle_.param("direct_ctrl", direct_ctrl, false);
+  if (direct_ctrl) {
+    setArmApi();
   } else {
     setIntCommApi();
   }
@@ -33,11 +31,11 @@ bool G1Controller::init() {
   motion_server_ = std::make_unique<ArmMotionServer>(
       handle_, "/droid_arm_ctrl/arm_motion", false);
   motion_server_->registerGoalCallback(
-      std::bind(&G1Controller::goalCallback, this));
+      std::bind(&G1ArmController::goalCallback, this));
   return true;
 }
 
-void G1Controller::start() {
+void G1ArmController::start() {
   if (running_) {
     ROS_WARN("Controller is already running");
     return;
@@ -51,23 +49,27 @@ void G1Controller::start() {
     return;
   }
   running_ = true;
-  communication_thread_ = std::thread(&G1Controller::communicationLoop, this);
+  communication_thread_ =
+      std::thread(&G1ArmController::communicationLoop, this);
   while (low_state_.tick == 0) {
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
   }
   prev_key_frame_.q = low_state_.getQ();
-  prev_key_frame_.dq = low_state_.getDq();
-  prev_key_frame_.tau = low_state_.getTau();
+  prev_key_frame_.dq = Eigen::VectorXf::Zero(14);
+  prev_key_frame_.tau = Eigen::VectorXf::Zero(14);
   prev_key_frame_.kp = 0.f;
-  prev_key_frame_.kd = 0.f;
-  low_cmd_.setControlGain(0.f, 0.f);
+  prev_key_frame_.kd = 1.f;
+  prev_key_frame_.duration = 2.0;
+  low_cmd_.setControlGain(0.f, 1.f);
   low_cmd_.setQ(low_state_.getQ());
-  ctrl_thread_ = std::thread(&G1Controller::ctrlLoop, this);
+  ctrl_thread_ = std::thread(&G1ArmController::ctrlLoop, this);
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  planInitMotion();
   motion_server_->start();
   ROS_INFO("Controller started");
 }
 
-void G1Controller::stop() {
+void G1ArmController::stop() {
   running_ = false;
   if (motion_server_) {
     motion_server_->shutdown();
@@ -84,11 +86,15 @@ void G1Controller::stop() {
   arm_state_ = StateMachine::Init;
 }
 
-void G1Controller::ctrlStep() {}
+void G1ArmController::ctrlStep() {}
 
-void G1Controller::goalCallback() {
-  if (arm_state_ != StateMachine::Idle && arm_state_ != StateMachine::Init) {
-    ROS_WARN("Arm is busy, cannot accept new goal");
+void G1ArmController::goalCallback() {
+  if (arm_state_ != StateMachine::Idle) {
+    if (arm_state_ == StateMachine::Init) {
+      ROS_WARN("Arm state is not ready, cannot accept new goal");
+    } else {
+      ROS_WARN("Arm is busy, cannot accept new goal");
+    }
     motion_result_.success = false;
     motion_server_->setAborted(motion_result_, "Arm is busy");
     return;
@@ -134,11 +140,11 @@ void G1Controller::goalCallback() {
   arm_state_ = StateMachine::Executing;
 }
 
-void G1Controller::preemptCallback() {}
+void G1ArmController::preemptCallback() {}
 
-sdk::G1DualArmLowCmd G1Controller::interpolateState(const KeyFrame &start_kf,
-                                                    const KeyFrame &end_kf,
-                                                    const double &ratio) {
+sdk::G1DualArmLowCmd G1ArmController::interpolateState(const KeyFrame &start_kf,
+                                                       const KeyFrame &end_kf,
+                                                       const double &ratio) {
   sdk::G1DualArmLowCmd cmd;
   q_interp_fn_.setPolyInterpKernel(1.0, start_kf.q, end_kf.q);
   cmd.setQ(q_interp_fn_.solve(ratio));
@@ -150,7 +156,22 @@ sdk::G1DualArmLowCmd G1Controller::interpolateState(const KeyFrame &start_kf,
   return cmd;
 }
 
-void G1Controller::planPickupMotion() {
+void G1ArmController::planInitMotion() {
+  if (arm_state_ != StateMachine::Init) {
+    ROS_ERROR("Cannot plan init motion: arm is not in Init state");
+  }
+  KeyFrame init_kf = prev_key_frame_;
+  init_kf.q << 0, 0.62, 0, 1.04, 0, 0, 0, 0, -0.62, 0, 1.04, 0, 0, 0;
+  init_kf.dq = Eigen::VectorXf::Zero(14);
+  init_kf.tau = Eigen::VectorXf::Zero(14);
+  init_kf.kp = 40.f;
+  init_kf.kd = 1.f;
+  init_kf.duration = 2.0;
+  motion_seq_.push_back(init_kf);
+  arm_state_ = StateMachine::Executing;
+}
+
+void G1ArmController::planPickupMotion() {
   KeyFrame kf;
   Eigen::Isometry3d left_arm_target_pose = Eigen::Isometry3d::Identity(),
                     right_arm_target_pose = Eigen::Isometry3d::Identity();
@@ -225,7 +246,7 @@ void G1Controller::planPickupMotion() {
   motion_seq_.push_back(kf);
 }
 
-void G1Controller::planPlaceMotion() {
+void G1ArmController::planPlaceMotion() {
   KeyFrame kf;
   Eigen::Isometry3d left_arm_target_pose = Eigen::Isometry3d::Identity(),
                     right_arm_target_pose = Eigen::Isometry3d::Identity();
@@ -275,7 +296,7 @@ void G1Controller::planPlaceMotion() {
   motion_seq_.push_back(kf);
 }
 
-void G1Controller::planHelloMotion() {
+void G1ArmController::planHelloMotion() {
   KeyFrame kf = prev_key_frame_;
   Eigen::VectorXf q1(7), q2(7);
   q1 << -0.7, -0.2, 0.32, -0.469207, -1.58333, -0.0643305, -0.488429;
@@ -298,7 +319,7 @@ void G1Controller::planHelloMotion() {
   }
 }
 
-void G1Controller::planSelfIntroductionMotion() {
+void G1ArmController::planSelfIntroductionMotion() {
   KeyFrame kf = prev_key_frame_;
   kf.q.tail<7>() << -0.75, -0.7, 0.8, -0.75, 1.2, 0, 0;
   kf.dq = Eigen::VectorXf::Zero(14);
@@ -314,7 +335,7 @@ void G1Controller::planSelfIntroductionMotion() {
   motion_seq_.push_back(kf);
 }
 
-void G1Controller::planShrugMotion() {
+void G1ArmController::planShrugMotion() {
   KeyFrame kf = prev_key_frame_;
   // clang-format off
   kf.q << -0.2, 0.2, 0.2, 0.6, -1.5, 0, 0,
@@ -333,7 +354,7 @@ void G1Controller::planShrugMotion() {
   // motion_seq_.push_back(kf);
 }
 
-void G1Controller::planPromotionMotion() {
+void G1ArmController::planPromotionMotion() {
   KeyFrame kf = prev_key_frame_;
   kf.q.tail<7>() << 0, -0.9, -1.5, 0.2, 1.2, 0, 0.1;
   kf.duration = 3.0;
@@ -347,7 +368,7 @@ void G1Controller::planPromotionMotion() {
   motion_seq_.push_back(kf);
 }
 
-void G1Controller::planPointMotion() {
+void G1ArmController::planPointMotion() {
   KeyFrame kf = prev_key_frame_;
   // Eigen::Isometry3d target_pose = Eigen::Isometry3d::Identity();
   // Eigen::VectorXf goal_q(14);
@@ -387,7 +408,7 @@ void G1Controller::planPointMotion() {
   motion_seq_.push_back(kf);
 }
 
-void G1Controller::planAnswer1Motion() {
+void G1ArmController::planAnswer1Motion() {
   KeyFrame kf = prev_key_frame_;
   // Eigen::Isometry3d target_pose = Eigen::Isometry3d::Identity();
   // Eigen::VectorXf goal_q(14);
@@ -411,7 +432,7 @@ void G1Controller::planAnswer1Motion() {
   motion_seq_.push_back(kf);
 }
 
-void G1Controller::planAnswer2Motion() {
+void G1ArmController::planAnswer2Motion() {
   KeyFrame kf = prev_key_frame_;
   // Eigen::Isometry3d target_pose = Eigen::Isometry3d::Identity();
   // Eigen::VectorXf goal_q(14);

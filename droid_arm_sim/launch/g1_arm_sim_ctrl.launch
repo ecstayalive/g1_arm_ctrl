@@ -1,0 +1,11 @@
+<launch>
+    <param name="robot_description" command="cat $(find g1_description)/urdf/g1_dual_arm.urdf" />
+    <param name="robot_description_semantic"
+        command="cat $(find g1_dual_arm_moveit_config)/config/g1_dual_arm.srdf" />
+    <rosparam command="load" file="$(find g1_dual_arm_moveit_config)/config/kinematics.yaml"
+        subst_value="true" />
+    <include file="$(find g1_dual_arm_moveit_config)/launch/planning_pipeline.launch.xml">
+        <arg name="pipeline" value="ompl" />
+    </include>
+    <node name="droid_arm_sim" pkg="droid_arm_sim" type="droid_arm_sim_node" output="screen"></node>
+</launch>
