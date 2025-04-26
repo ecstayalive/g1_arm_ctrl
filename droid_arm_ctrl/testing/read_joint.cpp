@@ -25,7 +25,7 @@ class TestApi {
     while (low_state_.tick == 0) {
       std::this_thread::sleep_for(std::chrono::milliseconds(2));
     }
-    low_cmd_.setControlGain(0.f, 1.f);
+    low_cmd_.setControlGain(0.f, 0.f);
     low_cmd_.setQ(low_state_.getQ());
   }
 
@@ -59,43 +59,9 @@ int main(int argc, char **argv) {
   target_pos << 0.f, M_PI_2f32, 0.f, M_PI_2f32, 0.f, 0.f, 0.f,
                 0.f, -M_PI_2f32, 0.f, M_PI_2f32, 0.f, 0.f, 0.f;
   // clang-format on
-
-  // Initialize arm
-  Eigen::VectorXf cur_q(14), cmd_q(init_pos);
-  test_api.low_state_.getQ(cur_q);
-  float period = 2.f;
-  int num_time_steps = static_cast<int>(period / control_dt);
-  for (int i{0}; i < num_time_steps; ++i) {
-    float phase = static_cast<float>(i) / num_time_steps;
-    test_api.low_cmd_.setQ(cur_q * (1 - phase) + phase * init_pos);
-    test_api.low_cmd_.setDq(Eigen::VectorXf::Zero(14));
-    test_api.low_cmd_.setTau(Eigen::VectorXf::Zero(14));
-    test_api.low_cmd_.setControlGain(40.f, 1.0f);
-    std::this_thread::sleep_for(sleep_time);
-  }
-
-  // Lift arm
-  period = 5.0f;
-  num_time_steps = static_cast<int>(period / control_dt);
-  for (int i{0}; i < num_time_steps; ++i) {
-    cmd_q += (target_pos - cmd_q).cwiseMax(-max_dq).cwiseMin(max_dq);
-    test_api.low_cmd_.setQ(cmd_q);
-    test_api.low_cmd_.setDq(Eigen::VectorXf::Zero(14));
-    test_api.low_cmd_.setTau(Eigen::VectorXf::Zero(14));
-    test_api.low_cmd_.setControlGain(40.f, 1.0f);
-    std::this_thread::sleep_for(sleep_time);
-  }
-
-  // Reset arm
-  period = 5.0f;
-  num_time_steps = static_cast<int>(period / control_dt);
-  for (int i{0}; i < num_time_steps; ++i) {
-    cmd_q += (init_pos - cmd_q).cwiseMax(-max_dq).cwiseMin(max_dq);
-    test_api.low_cmd_.setQ(cmd_q);
-    test_api.low_cmd_.setDq(Eigen::VectorXf::Zero(14));
-    test_api.low_cmd_.setTau(Eigen::VectorXf::Zero(14));
-    test_api.low_cmd_.setControlGain(40.f, 1.f);
-    std::this_thread::sleep_for(sleep_time);
+  while (true) {
+    std::cout << "Joint Position: " << test_api.low_state_.getQ().transpose()
+              << std::endl;
   }
 
   return 0;

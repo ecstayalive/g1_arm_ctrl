@@ -8,6 +8,7 @@
 #include "droid_arm_ctrl/arm_api.h"
 #include "droid_arm_ctrl/arm_planner.h"
 #include "droid_arm_ctrl/utils.h"
+#include "droid_arm_ctrl/logs.h"
 // clang-format on
 #include <actionlib/server/simple_action_server.h>
 
@@ -194,6 +195,8 @@ class G1ArmController {
         default:
           break;
       }
+      logger_.publishCmd(low_cmd_);
+      logger_.publishState(low_state_);
       rate.sleep();
     }
   }
@@ -256,9 +259,11 @@ class G1ArmController {
   std::deque<KeyFrame> motion_seq_;
   MotionLibsRegistry motion_libs_;
 
+  Loggers logger_;
+
   Eigen::Matrix<float, 14, 1> joint_tau_limit_;
   Eigen::Matrix<float, 14, 1> joint_home_;
-  const double kTauTimeLimit_{2.0};
+  const double kTauTimeLimit_{10.0};
   double max_tau_time_{0.0};
 };
 }  // namespace g1_controller

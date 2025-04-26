@@ -5,11 +5,11 @@
 namespace g1_controller {
 
 G1ArmController::G1ArmController(const ros::NodeHandle &handle)
-    : handle_(handle), arm_state_{StateMachine::Init} {
+    : handle_(handle), arm_state_{StateMachine::Init}, logger_(handle_) {
   // arm_model_ = std::make_unique<g1_dual_arm::G1DualArmModel>(handle);
   // clang-format off
-  joint_tau_limit_ << 24, 24, 24, 24, 24, 5, 5,
-                      24, 24, 24, 24, 24, 5, 5;
+  joint_tau_limit_ << 24, 24, 24, 24, 24, 4.5, 4.5,
+                      24, 24, 24, 24, 24, 4.5, 4.5;
   joint_home_ << 0, 0.62, 0, 1.04, 0, 0, 0, 0, -0.62, 0, 1.04, 0, 0, 0;
   // clang-format on
 }
@@ -63,7 +63,7 @@ void G1ArmController::start() {
   prev_key_frame_.kp = 0.f;
   prev_key_frame_.kd = 1.f;
   prev_key_frame_.duration = 2.0;
-  low_cmd_.setControlGain(0.f, 1.f);
+  low_cmd_.setControlGain(0.f, 0.f);
   low_cmd_.setQ(low_state_.getQ());
   ctrl_thread_ = std::thread(&G1ArmController::ctrlLoop, this);
   std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -150,8 +150,8 @@ sdk::G1DualArmLowCmd G1ArmController::interpolateState(const KeyFrame &start_kf,
                                                        const KeyFrame &end_kf,
                                                        const double &ratio) {
   sdk::G1DualArmLowCmd cmd;
-  q_interp_fn_.setPolyInterpKernel(1.0, start_kf.q, end_kf.q);
-  cmd.setQ(q_interp_fn_.solve(ratio));
+  c_interp_fn_.setPolyInterpKernel(1.0, start_kf.q, end_kf.q);
+  cmd.setQ(c_interp_fn_.solve(ratio));
   // q_interp_fn_.setPolyInterpolationKernel(1.0, start_kf.dq, end_kf.dq);
   // cmd.setDq(q_interp_fn_.solve(ratio));
   // q_interp_fn_.setPolyInterpolationKernel(1.0, start_kf.tau, end_kf.tau);
@@ -365,7 +365,7 @@ void G1ArmController::planShrugMotion(std::deque<KeyFrame> &motion_seq) {
   motion_seq.push_back(kf);
   kf.duration = 4.0;
   motion_seq_.push_back(kf);
-  kf.q.tail<7>() = joint_home_.tail<7>();
+  kf.q = joint_home_;
   kf.duration = 3.5;
   motion_seq.push_back(kf);
 }
