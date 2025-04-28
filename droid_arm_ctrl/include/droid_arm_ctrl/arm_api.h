@@ -81,25 +81,25 @@ class G1DualArmAPI : public DualArmAPI {
     for (int i{kG1ArmIdxStart_}; i < kG1ArmIdxStart_ + kG1ArmDof_; ++i) {
       low_cmd_.motor_cmd()[i].mode(1);
       low_cmd_.motor_cmd()[i + kG1ArmDof_].mode(1);
-      if (checkJointSafety(cmd, i)) {
-        low_cmd_.motor_cmd()[i].kp(cmd.left_arm.kp[i - kG1ArmIdxStart_]);
-        low_cmd_.motor_cmd()[i].kd(cmd.left_arm.kd[i - kG1ArmIdxStart_]);
-        low_cmd_.motor_cmd()[i].q(cmd.left_arm.q[i - kG1ArmIdxStart_]);
-        low_cmd_.motor_cmd()[i].dq(cmd.left_arm.dq[i - kG1ArmIdxStart_]);
-        low_cmd_.motor_cmd()[i].tau(cmd.left_arm.tau[i - kG1ArmIdxStart_]);
-      }
-      if (checkJointSafety(cmd, i + kG1ArmDof_)) {
-        low_cmd_.motor_cmd()[i + kG1ArmDof_].kp(
-            cmd.right_arm.kp[i - kG1ArmIdxStart_]);
-        low_cmd_.motor_cmd()[i + kG1ArmDof_].kd(
-            cmd.right_arm.kd[i - kG1ArmIdxStart_]);
-        low_cmd_.motor_cmd()[i + kG1ArmDof_].q(
-            cmd.right_arm.q[i - kG1ArmIdxStart_]);
-        low_cmd_.motor_cmd()[i + kG1ArmDof_].dq(
-            cmd.right_arm.dq[i - kG1ArmIdxStart_]);
-        low_cmd_.motor_cmd()[i + kG1ArmDof_].tau(
-            cmd.right_arm.tau[i - kG1ArmIdxStart_]);
-      }
+      // if (checkJointSafety(cmd, i)) {
+      low_cmd_.motor_cmd()[i].kp(cmd.left_arm.kp[i - kG1ArmIdxStart_]);
+      low_cmd_.motor_cmd()[i].kd(cmd.left_arm.kd[i - kG1ArmIdxStart_]);
+      low_cmd_.motor_cmd()[i].q(cmd.left_arm.q[i - kG1ArmIdxStart_]);
+      low_cmd_.motor_cmd()[i].dq(cmd.left_arm.dq[i - kG1ArmIdxStart_]);
+      low_cmd_.motor_cmd()[i].tau(cmd.left_arm.tau[i - kG1ArmIdxStart_]);
+      // }
+      // if (checkJointSafety(cmd, i + kG1ArmDof_)) {
+      low_cmd_.motor_cmd()[i + kG1ArmDof_].kp(
+          cmd.right_arm.kp[i - kG1ArmIdxStart_]);
+      low_cmd_.motor_cmd()[i + kG1ArmDof_].kd(
+          cmd.right_arm.kd[i - kG1ArmIdxStart_]);
+      low_cmd_.motor_cmd()[i + kG1ArmDof_].q(
+          cmd.right_arm.q[i - kG1ArmIdxStart_]);
+      low_cmd_.motor_cmd()[i + kG1ArmDof_].dq(
+          cmd.right_arm.dq[i - kG1ArmIdxStart_]);
+      low_cmd_.motor_cmd()[i + kG1ArmDof_].tau(
+          cmd.right_arm.tau[i - kG1ArmIdxStart_]);
+      // }
     }
     low_cmd_.crc() =
         crc32Core((uint32_t*)&low_cmd_, (sizeof(low_cmd_) >> 2) - 1);
@@ -152,7 +152,7 @@ class G1DualArmAPI : public DualArmAPI {
     if (low_state->crc() !=
         crc32Core((uint32_t*)low_state,
                   (sizeof(unitree_hg::msg::dds_::LowState_) >> 2) - 1)) {
-      std::cout << "low_state CRC Error" << std::endl;
+      std::cerr << "Error: low_state CRC Error" << std::endl;
       return;
     }
     memcpy(&low_state_, low_state, sizeof(unitree_hg::msg::dds_::LowState_));
@@ -242,7 +242,7 @@ class G1DualCommAPI : public DualArmAPI {
       msg_.velocity[2 * i + 1] = cmd.left_arm.kd[i];
       msg_.position[2 * (i + kG1ArmDof_)] = cmd.right_arm.q[i];
       msg_.velocity[2 * (i + kG1ArmDof_)] = cmd.right_arm.dq[i];
-      msg_.position[2 * (i + kG1ArmDof_) + 1] = cmd.right_arm.kd[i];
+      msg_.position[2 * (i + kG1ArmDof_) + 1] = cmd.right_arm.kp[i];
       msg_.velocity[2 * (i + kG1ArmDof_) + 1] = cmd.right_arm.kd[i];
     }
   }

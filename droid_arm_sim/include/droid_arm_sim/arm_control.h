@@ -19,6 +19,7 @@ class G1ArmSimController : public G1ArmController {
     motion_server_->registerGoalCallback(
         std::bind(&G1ArmSimController::goalCallback, this));
     registerMotion();
+    motion_libs_.listMotion();
     return true;
   }
 

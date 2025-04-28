@@ -63,8 +63,6 @@ void G1ArmController::start() {
   prev_key_frame_.kp = 0.f;
   prev_key_frame_.kd = 1.f;
   prev_key_frame_.duration = 2.0;
-  low_cmd_.setControlGain(0.f, 0.f);
-  low_cmd_.setQ(low_state_.getQ());
   ctrl_thread_ = std::thread(&G1ArmController::ctrlLoop, this);
   std::this_thread::sleep_for(std::chrono::seconds(1));
   planInitMotion();
@@ -150,9 +148,9 @@ sdk::G1DualArmLowCmd G1ArmController::interpolateState(const KeyFrame &start_kf,
                                                        const KeyFrame &end_kf,
                                                        const double &ratio) {
   sdk::G1DualArmLowCmd cmd;
-  c_interp_fn_.setPolyInterpKernel(1.0, start_kf.q, end_kf.q);
-  cmd.setQ(c_interp_fn_.solve(ratio));
-  // q_interp_fn_.setPolyInterpolationKernel(1.0, start_kf.dq, end_kf.dq);
+  q_interp_fn_.setPolyInterpKernel(1.0, start_kf.q, end_kf.q);
+  cmd.setQ(q_interp_fn_.solve(ratio));
+  // q_i nterp_fn_.setPolyInterpolationKernel(1.0, start_kf.dq, end_kf.dq);
   // cmd.setDq(q_interp_fn_.solve(ratio));
   // q_interp_fn_.setPolyInterpolationKernel(1.0, start_kf.tau, end_kf.tau);
   // cmd.setTau(q_interp_fn_.solve(ratio));

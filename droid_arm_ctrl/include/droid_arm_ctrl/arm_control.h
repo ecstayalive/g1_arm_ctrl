@@ -237,8 +237,8 @@ class G1ArmController {
 
  protected:
   ros::NodeHandle handle_;
-  sdk::G1DualArmLowCmd low_cmd_;
-  sdk::G1DualArmLowState low_state_;
+  sdk::G1DualArmLowCmd low_cmd_{};
+  sdk::G1DualArmLowState low_state_{};
   std::thread communication_thread_, ctrl_thread_;
   std::atomic<bool> running_{false};
   std::unique_ptr<sdk::DualArmAPI> api_ptr_;
