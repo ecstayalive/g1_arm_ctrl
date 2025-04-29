@@ -371,7 +371,7 @@ void G1ArmController::planShrugMotion(std::deque<KeyFrame> &motion_seq) {
 void G1ArmController::planPromotionMotion(std::deque<KeyFrame> &motion_seq) {
   motion_seq.clear();
   KeyFrame kf = prev_key_frame_;
-  kf.q.tail<7>() << 0, -0.9, -1.5, 0.2, 1.2, 0, 0.1;
+  kf.q.tail<7>() << 0, -1.2, -1.5, 0.6, 1.2, 0, 0.1;
   kf.duration = 3.0;
   kf.kp = 80.f;
   kf.kd = 1.f;
@@ -379,6 +379,9 @@ void G1ArmController::planPromotionMotion(std::deque<KeyFrame> &motion_seq) {
   kf.duration = 2.0;
   motion_seq.push_back(kf);
   kf.q.tail<7>() = kf.q.tail<7>();
+  kf.duration = 3.0;
+  motion_seq.push_back(kf);
+  kf.q.tail<7>() = joint_home_.tail<7>();
   kf.duration = 3.0;
   motion_seq.push_back(kf);
 }
@@ -444,7 +447,7 @@ void G1ArmController::planAnswer1Motion(std::deque<KeyFrame> &motion_seq) {
   motion_seq.push_back(kf);
   kf.duration = 2.0;
   motion_seq.push_back(kf);
-  kf.q.tail<7>() << 0, -0.62, 0, 1.04, 0, 0, 0;
+  kf.q.tail<7>() = joint_home_.tail<7>();
   kf.duration = 3.0;
   motion_seq.push_back(kf);
 }
@@ -462,14 +465,14 @@ void G1ArmController::planAnswer2Motion(std::deque<KeyFrame> &motion_seq) {
   //     goal_q);
   // std::cout << "find_ik: " << find_ik << "\ngoal_q: " << goal_q.transpose()
   //           << std::endl;
-  kf.q.tail<7>() << -1., -0.6, -1, 0.6, 1.2, 0, 0.1;
+  kf.q.tail<7>() << -1.0, -0.5, -0.4, 0.6, 1.0, 0, 0.1;
   kf.duration = 3.0;
   kf.kp = 80.f;
   kf.kd = 1.f;
   motion_seq.push_back(kf);
   kf.duration = 2.0;
   motion_seq.push_back(kf);
-  kf.q.tail<7>() << 0, -0.62, 0, 1.04, 0, 0, 0;
+  kf.q.tail<7>() = joint_home_.tail<7>();
   kf.duration = 3.0;
   motion_seq.push_back(kf);
 }
