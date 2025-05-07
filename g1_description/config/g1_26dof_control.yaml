@@ -1,0 +1,77 @@
+g1_gazebo:
+    # Publish all joint states -----------------------------------
+    joint_state_controller:
+        type: joint_state_controller/JointStateController
+        publish_rate: 1000
+
+    # Left arm controllers ---------------------------------------
+    left_shoulder_pitch_controller:
+        type: unitree_legged_control/UnitreeJointController
+        joint: left_shoulder_pitch_joint
+        pid: {p: 200.0, i: 0.0, d: 5.0}
+
+    left_shoulder_roll_controller:
+        type: unitree_legged_control/UnitreeJointController
+        joint: left_shoulder_roll_joint
+        pid: {p: 200.0, i: 0.0, d: 5.0}
+
+    left_shoulder_yaw_controller:
+        type: unitree_legged_control/UnitreeJointController
+        joint: left_shoulder_yaw_joint
+        pid: {p: 200.0, i: 0.0, d: 5.0}
+
+    left_elbow_controller:
+        type: unitree_legged_control/UnitreeJointController
+        joint: left_elbow_joint
+        pid: {p: 200.0, i: 0.0, d: 5.0}
+
+    left_wrist_roll_controller:
+        type: unitree_legged_control/UnitreeJointController
+        joint: left_wrist_roll_joint
+        pid: {p: 200.0, i: 0.0, d: 5.0}
+
+    left_wrist_pitch_controller:
+        type: unitree_legged_control/UnitreeJointController
+        joint: left_wrist_pitch_joint
+        pid: {p: 200.0, i: 0.0, d: 5.0}
+
+    left_wrist_yaw_controller:
+        type: unitree_legged_control/UnitreeJointController
+        joint: left_wrist_yaw_joint
+        pid: {p: 200.0, i: 0.0, d: 5.0}
+
+    # Right arm controllers ---------------------------------------
+    right_shoulder_pitch_controller:
+        type: unitree_legged_control/UnitreeJointController
+        joint: right_shoulder_pitch_joint
+        pid: {p: 200.0, i: 0.0, d: 5.0}
+
+    right_shoulder_roll_controller:
+        type: unitree_legged_control/UnitreeJointController
+        joint: right_shoulder_roll_joint
+        pid: {p: 200.0, i: 0.0, d: 5.0}
+
+    right_shoulder_yaw_controller:
+        type: unitree_legged_control/UnitreeJointController
+        joint: right_shoulder_yaw_joint
+        pid: {p: 200.0, i: 0.0, d: 5.0}
+
+    right_elbow_controller:
+        type: unitree_legged_control/UnitreeJointController
+        joint: right_elbow_joint
+        pid: {p: 200.0, i: 0.0, d: 5.0}
+
+    right_wrist_roll_controller:
+        type: unitree_legged_control/UnitreeJointController
+        joint: right_wrist_roll_joint
+        pid: {p: 200.0, i: 0.0, d: 5.0}
+
+    right_wrist_pitch_controller:
+        type: unitree_legged_control/UnitreeJointController
+        joint: right_wrist_pitch_joint
+        pid: {p: 200.0, i: 0.0, d: 5.0}
+
+    right_wrist_yaw_controller:
+        type: unitree_legged_control/UnitreeJointController
+        joint: right_wrist_yaw_joint
+        pid: {p: 200.0, i: 0.0, d: 5.0}
